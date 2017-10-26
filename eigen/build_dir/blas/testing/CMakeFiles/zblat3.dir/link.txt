@@ -1,0 +1,1 @@
+/usr/bin/gfortran    -O3 CMakeFiles/zblat3.dir/zblat3.f.o  -o zblat3  ../libeigen_blas.so -Wl,-rpath,/home/mprzystupa/git/cs526Project/eigen/build_dir/blas 
