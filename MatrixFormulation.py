@@ -6,7 +6,7 @@ def M(m):
 
 def I():
 	return np.identity(3)
-
+#o matrices to fill in the patches that aren't used
 def O3():
 	return np.zeros([3,3])
 def O6():
@@ -16,28 +16,31 @@ def O63():
 def O36():
 	return np.zeros([3,6])
 
+# used to create R tilda
 def R(theta):
 	r = np.array([-0.5*np.sin(theta), 0.5*np.cos(theta), 0])
 	return np.array([
 		[   0,   0, -r[1]],
                 [   0,   0,  r[0]],
                 [r[1],-r[0],    0]])
+#Inertia matrix
 def Iz(m):
 	return np.array([
 		[   1,   0, 0],
                 [   0,   1,  0],
                 [   0,   0,    m**2 / 12]])
+#THis is the Newtonw euler formulation 
 def EU(m):
 	return np.vstack([
 		np.hstack((M(m), O3())),
 		np.hstack((O3(),Iz(m)))])
+#Fc constraints (purple squares on my notes
+# FYI, at present R is off 
 def Fc(theta):
 	return np.vstack([ -I(), -R(theta)])
 def FcT(theta):
 	return np.hstack([ -I(), R(theta)])
-print(EU(1).shape)
-print(Fc(np.pi / 4))
-print(Fc(np.pi / 4).shape)
+
 
 
 def FourLinkMatrix(m1,t1, m2,t2, m3, t3, m4, t4):
@@ -53,6 +56,14 @@ def FourLinkMatrix(m1,t1, m2,t2, m3, t3, m4, t4):
 		])
 	return mat
 
-print(FourLinkMatrix(1, np.pi / 4,1, np.pi / 4,1, np.pi / 4,1, np.pi / 4))
-print(FourLinkMatrix(1, np.pi / 4,1, np.pi / 4,1, np.pi / 4,1, np.pi / 4).shape)
+
+def FourLinkB():
+	#Written this way for readability...nothing else
+	return np.concatenate([
+		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
+		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
+		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
+		[ 0, -10, 0, 0,0,0, 0 ,0 ,0]])
+
+
 

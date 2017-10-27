@@ -1,6 +1,8 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
+
+from MatrixFormulation import FourLinkMatrix, FourLinkB
 import sys
 
 #  from pyquaternion import Quaternion    ## would be useful for 3D simulation
@@ -59,6 +61,7 @@ def main():
         link1 = Link();
         link2 = Link();
         b = np.array([0,-link1.mass*10.0,0,0,0,0,0,0,0])
+	#b = FourLinkB()
         resetSim()
 
         glutMainLoop()                   # start event processing loop
