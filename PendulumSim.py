@@ -28,7 +28,7 @@ class Link:
         vel=np.array([0.0,0.0,0.0])      ## initial velocity
         def draw(self):      ### steps to draw a link
                 glPushMatrix()                                            ## save copy of coord frame
-                glTranslatef(self.posn[0], self.posn[1], self.posn[2])    ## move 
+                glTranslatef(self.posn[0], self.posn[1], self.posn[2])    ## move
                 glRotatef(self.theta*RAD_TO_DEG,  0,0,1)                             ## rotate
                 glScale(self.size[0], self.size[1], self.size[2])         ## set size
                 glColor3f(self.color[0], self.color[1], self.color[2])    ## set colour
@@ -41,9 +41,11 @@ class Link:
 
 def main():
         global window
-        global link1, link2       
+        global link1, link2
+        global b
+
         glutInit(sys.argv)
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)     # display mode 
+        glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)     # display mode
         glutInitWindowSize(640, 480)                                  # window size
         glutInitWindowPosition(0, 0)                                  # window coords for mouse start at top-left
         window = glutCreateWindow("CPSC 526 Simulation Template")
@@ -53,11 +55,12 @@ def main():
         glutReshapeFunc(ReSizeGLScene)   # register the function to call when window is resized
         glutKeyboardFunc(keyPressed)     # register the function to call when keyboard is pressed
         InitGL(640, 480)                 # initialize window
-        
+
         link1 = Link();
         link2 = Link();
+        b = np.array([0,-link1.mass*10.0,0,0,0,0,0,0,0])
         resetSim()
-        
+
         glutMainLoop()                   # start event processing loop
 
 #####################################################
@@ -75,10 +78,11 @@ def resetSim():
         link1.size=[0.04, 1.0, 0.12]
         link1.color=[1,0.9,0.9]
         link1.posn=np.array([0.0,0.0,0.0])
-        link1.vel=np.array([0.0,2.0,0.0])
-        link1.theta = 0.4
-        link1.omega = 3        ## radians per second
-        
+        link1.vel=np.array([0.0,0.0,0.0])
+        #link1.theta = 3.9
+	link1.theta = np.pi/ 4        
+	link1.omega = 0.0        ## radians per second
+
         link2.size=[0.04, 1.0, 0.12]
         link2.color=[0.9,0.9,1.0]
         link2.posn=np.array([1.0,0.0,0.0])
@@ -126,22 +130,56 @@ def SimWorld():
             ####  for the constrained one-link pendulum, and the 4-link pendulum,
             ####  you will want to build the equations of motion as a linear system, and then solve that.
             ####  Here is a simple example of using numpy to solve a linear system.
-        a = np.array([[2, -4, 4], [34, 3, -1], [1, 1, 1]])
-        b = np.array([8, 30, 108])
+        m = 1.0
+        #r = np.array([0.5*np.sin(link1.theta), -0.5*np.cos(link1.theta), 0])
+	r = np.array([-0.5*np.sin(link1.theta), 0.5*np.cos(link1.theta), 0])
+        Iz = m*m*1.0/12
+
+        a = np.array([
+                [m, 0, 0, 0, 0, 0,-1, 0, 0],
+                [0, m, 0, 0, 0, 0, 0,-1, 0],
+                [0, 0, m, 0, 0, 0, 0, 0,-1],
+                [0, 0, 0, 1, 0, 0, 0, 0, -r[1]],
+                [0, 0, 0, 0, 1, 0, 0, 0, r[0]],
+                [0, 0, 0, 0, 0,Iz,r[1], -r[0], 0],
+                [-1,0, 0, 0, 0,r[1], 0, 0, 0],
+                [0,-1, 0, 0, 0,-r[0], 0, 0, 0],
+                [0, 0,-1, -r[1],r[0], 0, 0, 0, 0]])
+	
         x = np.linalg.solve(a, b)
              #  print(x)   # [ -2.17647059  53.54411765  56.63235294]
-
+        #print(x)
             #### explicit Euler integration to update the state
+        acc1 = x[0:3]
+        #print(acc1)
+
         link1.posn += link1.vel*dT
         link1.vel += acc1*dT
         link1.theta += link1.omega*dT
-        link2.omega += omega_dot1*dT
+        link1.omega += x[5]*dT
+	kfriction = 1
+	tau = -kfriction * link1.omega
 
-        link2.posn += link2.vel*dT
-        link2.vel += acc2*dT
-        link2.theta += link2.omega*dT
-        link2.omega += omega_dot2*dT
+	origin = np.array([-0.5 * np.sin(np.pi / 4), 0.5 * np.cos(np.pi / 4) , 0])
+		
+	kp = 1.0
+	kd = 0.0
+	
+	#constraint = kp * (link1.posn - r - origin) + kd * (np.cross(x[3:6], r) +link1.vel)
 
+	w = x[3:6]
+	w_new = np.cross(w, r);
+	constraint = kp * (link1.posn + r - origin) + kd * w_new;
+	wwr = np.cross(w, w_new) + constraint;
+	
+	b[5] = tau
+        b[6] = -r[0]*link1.omega*link1.omega + constraint[0]
+        b[7] = -r[1]*link1.omega*link1.omega + constraint [1] 
+	b[8] = constraint[2] 
+
+	#b[6] = wwr[0] 
+	#b[7] = wwr[1]
+	#b[8] = wwr[2]
         simTime += dT
 
             #### draw the updated state
@@ -187,7 +225,7 @@ def InitGL(Width, Height):				# We call this right after our OpenGL window is cr
 #####################################################
 
 def ReSizeGLScene(Width, Height):
-    if Height == 0:						# Prevent A Divide By Zero If The Window Is Too Small 
+    if Height == 0:						# Prevent A Divide By Zero If The Window Is Too Small
 	    Height = 1
     glViewport(0, 0, Width, Height)		# Reset The Current Viewport And Perspective Transformation
     glMatrixMode(GL_PROJECTION)
@@ -263,43 +301,43 @@ def DrawCube():
             ### Draw the wireframe edges
 	glColor3f(0.0, 0.0, 0.0);
 	glLineWidth(1.0);
-     
-	glBegin(GL_LINE_LOOP);		
+
+	glBegin(GL_LINE_LOOP);
 	glVertex3f( 1.0, 1.0,-1.0);		# Top Right Of The Quad (Top)
 	glVertex3f(-1.0, 1.0,-1.0);		# Top Left Of The Quad (Top)
 	glVertex3f(-1.0, 1.0, 1.0);		# Bottom Left Of The Quad (Top)
 	glVertex3f( 1.0, 1.0, 1.0);		# Bottom Right Of The Quad (Top)
 	glEnd();				# Done Drawing The Quad
 
-	glBegin(GL_LINE_LOOP);		
+	glBegin(GL_LINE_LOOP);
 	glVertex3f( 1.0,-1.0, 1.0);		# Top Right Of The Quad (Bottom)
 	glVertex3f(-1.0,-1.0, 1.0);		# Top Left Of The Quad (Bottom)
 	glVertex3f(-1.0,-1.0,-1.0);		# Bottom Left Of The Quad (Bottom)
 	glVertex3f( 1.0,-1.0,-1.0);		# Bottom Right Of The Quad (Bottom)
 	glEnd();				# Done Drawing The Quad
 
-	glBegin(GL_LINE_LOOP);		
+	glBegin(GL_LINE_LOOP);
 	glVertex3f( 1.0, 1.0, 1.0);		# Top Right Of The Quad (Front)
 	glVertex3f(-1.0, 1.0, 1.0);		# Top Left Of The Quad (Front)
 	glVertex3f(-1.0,-1.0, 1.0);		# Bottom Left Of The Quad (Front)
 	glVertex3f( 1.0,-1.0, 1.0);		# Bottom Right Of The Quad (Front)
 	glEnd();				# Done Drawing The Quad
 
-	glBegin(GL_LINE_LOOP);		
+	glBegin(GL_LINE_LOOP);
 	glVertex3f( 1.0,-1.0,-1.0);		# Bottom Left Of The Quad (Back)
 	glVertex3f(-1.0,-1.0,-1.0);		# Bottom Right Of The Quad (Back)
 	glVertex3f(-1.0, 1.0,-1.0);		# Top Right Of The Quad (Back)
 	glVertex3f( 1.0, 1.0,-1.0);		# Top Left Of The Quad (Back)
 	glEnd();				# Done Drawing The Quad
 
-	glBegin(GL_LINE_LOOP);		
+	glBegin(GL_LINE_LOOP);
 	glVertex3f(-1.0, 1.0, 1.0);		# Top Right Of The Quad (Left)
 	glVertex3f(-1.0, 1.0,-1.0);		# Top Left Of The Quad (Left)
 	glVertex3f(-1.0,-1.0,-1.0);		# Bottom Left Of The Quad (Left)
 	glVertex3f(-1.0,-1.0, 1.0);		# Bottom Right Of The Quad (Left)
 	glEnd();				# Done Drawing The Quad
 
-	glBegin(GL_LINE_LOOP);		
+	glBegin(GL_LINE_LOOP);
 	glVertex3f( 1.0, 1.0,-1.0);		# Top Right Of The Quad (Right)
 	glVertex3f( 1.0, 1.0, 1.0);		# Top Left Of The Quad (Right)
 	glVertex3f( 1.0,-1.0, 1.0);		# Bottom Left Of The Quad (Right)
@@ -307,7 +345,7 @@ def DrawCube():
 	glEnd();				# Done Drawing The Quad
 
 ####################################################
-# printf()  
+# printf()
 ####################################################
 
 def printf(format, *args):
@@ -318,4 +356,3 @@ def printf(format, *args):
 
 print ("Hit ESC key to quit.")
 main()
-    	
