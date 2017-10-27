@@ -127,14 +127,11 @@ def SimWorld():
             #### solve for the equations of motion (simple in this case!)
         acc1 = np.array([0,-10,0])       ### linear acceleration = [0, -G, 0]
         acc2 = np.array([0,-10,0])       ### linear acceleration = [0, -G, 0]
-        omega_dot1 = 0.0                 ### assume no angular acceleration
-        omega_dot2 = 0.0                 ### assume no angular acceleration
 
             ####  for the constrained one-link pendulum, and the 4-link pendulum,
             ####  you will want to build the equations of motion as a linear system, and then solve that.
             ####  Here is a simple example of using numpy to solve a linear system.
         m = 1.0
-        #r = np.array([0.5*np.sin(link1.theta), -0.5*np.cos(link1.theta), 0])
 	r = np.array([-0.5*np.sin(link1.theta), 0.5*np.cos(link1.theta), 0])
         Iz = m*m*1.0/12
 
@@ -172,7 +169,7 @@ def SimWorld():
 
 	w = x[3:6]
 	w_new = np.cross(w, r);
-	constraint = kp * (link1.posn + r - origin) + kd * w_new;
+	constraint = kp * (link1.posn + r - origin) + kd * (w_new + link1.vel);git s
 	wwr = np.cross(w, w_new) + constraint;
 	
 	b[5] = tau
@@ -180,14 +177,15 @@ def SimWorld():
         b[7] = -r[1]*link1.omega*link1.omega + constraint [1] 
 	b[8] = constraint[2] 
 
-	#b[6] = wwr[0] 
-	#b[7] = wwr[1]
-	#b[8] = wwr[2]
         simTime += dT
 
             #### draw the updated state
         DrawWorld()
-        printf("simTime=%.2f\n",simTime)
+        printf("simTime=%.2f\n",simTime) 
+	kinetic = .5 * (Iz + link1.mass * .5**2) * link1.omega**2 #From piazza 
+	# Formula I found in text: m * g * d / 2 * (1 - cos(theta), d = .5 for us
+	potential = link1.mass * -10 * .25 * (1 - np.cos(link1.theta)) 
+	printf("Kinetic: %.2f, Potential: %.2f\n", kinetic, potential)
 
 #####################################################
 #### DrawWorld():  draw the world
