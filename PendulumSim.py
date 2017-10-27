@@ -43,7 +43,7 @@ class Link:
 
 def main():
         global window
-        global link1, link2
+        global link1, link2, link3, link4
         global b
 
         glutInit(sys.argv)
@@ -59,7 +59,11 @@ def main():
         InitGL(640, 480)                 # initialize window
 
         link1 = Link();
+	#For 4 link version
         link2 = Link();
+	link3 = Link();
+	link4 = Link();
+
         b = np.array([0,-link1.mass*10.0,0,0,0,0,0,0,0])
 	#b = FourLinkB()
         resetSim()
@@ -71,7 +75,7 @@ def main():
 #####################################################
 
 def resetSim():
-        global link1, link2
+        global link1, link2, link3, link4
         global simTime, simRun
 
         printf("Simulation reset\n")
@@ -89,9 +93,23 @@ def resetSim():
         link2.size=[0.04, 1.0, 0.12]
         link2.color=[0.9,0.9,1.0]
         link2.posn=np.array([1.0,0.0,0.0])
-        link2.vel=np.array([0.0,4.0,0.0])
-        link2.theta = -0.2
+        link2.vel=np.array([0.0,0.0,0.0])
+        link2.theta = np.pi/ 4
         link2.omega = 0        ## radians per second
+
+	link3.size=[0.04, 1.0, 0.12]
+        link3.color=[0.9,0.9,1.0]
+        link3.posn=np.array([1.0,0.0,0.0])
+        link3.vel=np.array([0.0,0.0,0.0])
+        link3.theta = np.pi/ 4
+        link3.omega = 0        ## radians per second
+
+	link4.size=[0.04, 1.0, 0.12]
+        link4.color=[0.9,0.9,1.0]
+        link4.posn=np.array([1.0,0.0,0.0])
+        link4.vel=np.array([0.0,0.0,0.0])
+        link4.theta = np.pi/ 4
+        link4.omega = 0        ## radians per second
 
 #####################################################
 #### keyPressed():  called whenever a key is pressed
@@ -118,7 +136,7 @@ def keyPressed(key,x,y):
 
 def SimWorld():
         global simTime, dT, simRun
-        global link1, link2
+        global link1, link2, link3, link4
 
         deltaTheta = 2.4
         if (simRun==False):             ## is simulation stopped?
@@ -169,7 +187,7 @@ def SimWorld():
 
 	w = x[3:6]
 	w_new = np.cross(w, r);
-	constraint = kp * (link1.posn + r - origin) + kd * (w_new + link1.vel);git s
+	constraint = kp * (link1.posn + r - origin) + kd * (w_new + link1.vel);
 	wwr = np.cross(w, w_new) + constraint;
 	
 	b[5] = tau
@@ -192,7 +210,7 @@ def SimWorld():
 #####################################################
 
 def DrawWorld():
-        global link1, link2
+        global link1, link2, link3, link4
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	# Clear The Screen And The Depth Buffer
         glLoadIdentity();
@@ -201,6 +219,8 @@ def DrawWorld():
         DrawOrigin()
         link1.draw()
         link2.draw()
+	link3.draw()
+	link4.draw()
 
         glutSwapBuffers()                      # swap the buffers to display what was just drawn
 
