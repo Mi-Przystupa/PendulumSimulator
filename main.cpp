@@ -117,10 +117,6 @@ public:
 int main(){
     sf::RenderWindow window(sf::VideoMode(WIDTH,HEIGHT), "SFML works!");
     
-    sf::CircleShape shape(10.f);
-    shape.setPosition((ORIGIN.x) +   wirelength * cos(angle), ORIGIN.y + wirelength * sin(angle));
-    shape.setFillColor(sf::Color::Green);
-    
     Pendulum p(10.f, ORIGIN, 0, MASS, wirelength, angle);
     int t = 0;
     bool goRight = false;
@@ -177,7 +173,6 @@ int main(){
         p.updateCircle();
         
         //Draw images here
-        window.draw(shape);
         window.draw(p.getCircle());
         sf::Vertex line[] =
         {
