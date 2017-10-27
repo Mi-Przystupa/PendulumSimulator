@@ -21,7 +21,7 @@ float dA = angle * .01;
 float wirelength = 100;
 float gravity = 9.81;
 
-float dt = 0.1;
+float dt = 0.01;
 
 class Pendulum
 {
@@ -161,19 +161,30 @@ int main(){
         //updating b vector
         Eigen::Vector3f w_1(0, 0, p.m_w);
         Eigen::Vector3f r(cos(p.m_theta), sin(p.m_theta), 0);
+        //Eigen::Vector3f r(p.m_psn.x, p.m_psn.y, 0);
+
         Eigen::Vector3f w_1_new = w_1.cross(r);
+        float kp =0.1;
+        float kd =0.00;
+
+        Eigen::Vector3f p2_c( ORIGIN.x, ORIGIN.y, 0);
+        Eigen::Vector3f p1_c(p.m_psn.x + r[0], p.m_psn.y + r[1], 0 + r[2]);
+        Eigen::Vector3f v1_c( w_1_new[0], w_1_new[1], 0 + w_1_new[2]); 
+        Eigen::Vector3f err =   kp * (p1_c - p2_c) + kd * v1_c; 
         w_1_new = w_1.cross(w_1_new);
+        //w_1_new += err; 
+
+        
+        output[6] = w_1_new[0]+err[0];
+        output[7] = w_1_new[1]+err[1];
+        output[8] = w_1_new[2]+err[2];
         
         
-        output[6] = w_1_new[0];
-        output[7] = w_1_new[1];
-        output[8] = w_1_new[2];
-        
-        p.updateAngle();
+        //p.updateAngle();
         p.updateCircle();
         
         //Draw images here
-        window.draw(p.getCircle());
+       // window.draw(p.getCircle());
         sf::Vertex line[] =
         {
             p.m_origin,
@@ -181,7 +192,7 @@ int main(){
         };
         window.draw(line, 2, sf::Lines);
         
-        sf::sleep(sf::milliseconds(10));
+       // sf::sleep(sf::milliseconds(10));
         window.display();
     }
     
