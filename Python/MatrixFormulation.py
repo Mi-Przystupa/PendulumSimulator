@@ -2,7 +2,7 @@ import numpy as np
 
 
 def M(m):
-	return np.multiply(np.identity(3), m) 
+	return np.multiply(np.identity(3), m)
 
 def I():
 	return np.identity(3)
@@ -29,13 +29,13 @@ def Iz(m):
 		[   1,   0, 0],
                 [   0,   1,  0],
                 [   0,   0,    m**2 / 12]])
-#THis is the Newtonw euler formulation 
+#THis is the Newtonw euler formulation
 def EU(m):
 	return np.vstack([
 		np.hstack((M(m), O3())),
 		np.hstack((O3(),Iz(m)))])
 #Fc constraints (purple squares on my notes
-# FYI, at present R is off 
+# FYI, at present R is off
 def Fc(theta, rsign=-1):
 	return np.vstack([ -I(), rsign* R(theta)])
 #Is a mirror of the above, sign is flipped
@@ -65,6 +65,3 @@ def FourLinkB():
 		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
 		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
 		[ 0, -10, 0, 0,0,0, 0 ,0 ,0]])
-
-
-
