@@ -20,13 +20,13 @@ def O36():
 def R(theta):
 	r = np.array([-0.5*np.sin(theta), 0.5*np.cos(theta), 0])
 	return np.array([
-		[   0,   0, -r[1]],
+				[   0,   0, -r[1]],
                 [   0,   0,  r[0]],
                 [r[1],-r[0],    0]])
 #Inertia matrix
 def Iz(m):
 	return np.array([
-		[   1,   0, 0],
+				[   1,   0, 0],
                 [   0,   1,  0],
                 [   0,   0,    m**2 / 12]])
 #THis is the Newtonw euler formulation
@@ -37,23 +37,23 @@ def EU(m):
 #Fc constraints (purple squares on my notes
 # FYI, at present R is off
 def Fc(theta, rsign=-1):
-	return np.vstack([ -I(), rsign* R(theta)])
+	return np.vstack([ rsign*I(),  R(theta)])
 #Is a mirror of the above, sign is flipped
-def FcT(theta, rsign= 1):
-	return np.hstack([ -I(), rsign*R(theta)])
+def FcT(theta, rsign=-1):
+	return np.hstack([ rsign*I(), -1*R(theta)])
 
 
 
 def FourLinkMatrix(m1,t1, m2,t2, m3, t3, m4, t4):
 	mat = np.vstack([
-		np.hstack(( EU(m1),    O6(),  O6(),  O6(), Fc(t1),  Fc(t1), O63(),   O63())), #1
-		np.hstack((   O6(),  EU(m2),  O6(),  O6(),  O63(),Fc(t2,1),Fc(t2),   O63())), #2
+		np.hstack(( EU(m1),    O6(),  O6(),  O6(), Fc(t1),  Fc(t1,1), O63(),   O63())), #1
+		np.hstack((   O6(),  EU(m2),  O6(),  O6(),  O63(),Fc(t2),Fc(t2,1),   O63())), #2
 		np.hstack((   O6(),    O6(),EU(m3),  O6(),  O63(),   O63(),Fc(t3),Fc(t3,1))), #3
 		np.hstack((   O6(),    O6(),  O6(),EU(m4),  O63(),   O63(), O63(),  Fc(t4))), #4
 		np.hstack((FcT(t1),   O36(),  O36(),O36(),   O3(),    O3(),  O3(),    O3())), #A
-		np.hstack((FcT(t1), FcT(t2, -1),  O36(),O36(),   O3(),    O3(),  O3(),    O3())), #B
-		np.hstack((  O36(), FcT(t2),FcT(t3,-1),O36(),   O3(),    O3(),  O3(),    O3())),#C
-		np.hstack(( O36(),    O36(),FcT(t3),FcT(t4, -1), O3(),    O3(),  O3(),    O3())) #D
+		np.hstack((FcT(t1,1), FcT(t2),  O36(),O36(),   O3(),    O3(),  O3(),    O3())), #B
+		np.hstack((  O36(), FcT(t2,1),FcT(t3),O36(),   O3(),    O3(),  O3(),    O3())),#C
+		np.hstack(( O36(),    O36(),FcT(t3,1),FcT(t4), O3(),    O3(),  O3(),    O3())) #D
 		])
 	return mat
 

@@ -64,8 +64,7 @@ def main():
 	link3 = Link();
 	link4 = Link();
 
-        b = np.array([0,-link1.mass*10.0,0,0,0,0,0,0,0])
-	#b = FourLinkB()
+
         resetSim()
 
         glutMainLoop()                   # start event processing loop
@@ -153,16 +152,10 @@ def SimWorld():
         m = 1.0
         a = FourLinkMatrix(link1.mass,link1.theta, link2.mass,link2.theta, link3.mass,link3.theta, link4.mass,link4.theta)
         b = FourLinkB()
-        r1_ = np.array([0.5*np.sin(link1.theta), -0.5*np.cos(link1.theta), 0])
-        r2_ = np.array([0.5*np.sin(link2.theta), -0.5*np.cos(link2.theta), 0])
-        r3_ = np.array([0.5*np.sin(link3.theta), -0.5*np.cos(link3.theta), 0])
-        r4_ = np.array([0.5*np.sin(link4.theta), -0.5*np.cos(link4.theta), 0])
-
         r1 = np.array([-0.5*np.sin(link1.theta), 0.5*np.cos(link1.theta), 0])
         r2 = np.array([-0.5*np.sin(link2.theta), 0.5*np.cos(link2.theta), 0])
         r3 = np.array([-0.5*np.sin(link3.theta), 0.5*np.cos(link3.theta), 0])
         r4 = np.array([-0.5*np.sin(link4.theta), 0.5*np.cos(link4.theta), 0])
-
         omega1= np.array([0,0,link1.omega])
         omega2= np.array([0,0,link2.omega])
         omega3= np.array([0,0,link3.omega])
@@ -218,12 +211,12 @@ def DrawWorld():
         glLoadIdentity();
         gluLookAt(3,3,9,  0,0,0,  0,1,0)
 
-        DrawOrigin()
+
         link1.draw()
         link2.draw()
         link3.draw()
         link4.draw()
-
+        DrawOrigin()
         glutSwapBuffers()                      # swap the buffers to display what was just drawn
 
 #####################################################
