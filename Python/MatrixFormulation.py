@@ -58,10 +58,14 @@ def FourLinkMatrix(m1,t1, m2,t2, m3, t3, m4, t4):
 	return mat
 
 
-def FourLinkB():
+def FourLinkB(m1, m2, m3, m4):
 	#Written this way for readability...nothing else
 	return np.concatenate([
-		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
-		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
-		[ 0, -10, 0, 0,0,0, 0 ,0 ,0],
-		[ 0, -10, 0, 0,0,0, 0 ,0 ,0]])
+		[ 0, -10 * m1, 0, 0,0,0],
+                [ 0, -10 * m2, 0, 0,0,0],
+                [ 0, -10 * m3, 0, 0,0,0],
+                [ 0, -10 * m4, 0, 0,0,0],
+		[ 0 ,0 ,0],
+		[ 0 ,0 ,0],
+		[ 0 ,0 ,0],
+                [ 0 ,0 ,0]])

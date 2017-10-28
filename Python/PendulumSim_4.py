@@ -151,7 +151,8 @@ def SimWorld():
             ####  Here is a simple example of using numpy to solve a linear system.
         m = 1.0
         a = FourLinkMatrix(link1.mass,link1.theta, link2.mass,link2.theta, link3.mass,link3.theta, link4.mass,link4.theta)
-        b = FourLinkB()
+        b = FourLinkB(link1.mass,link2.mass,link3.mass,link4.mass)
+
         r1 = np.array([-0.5*np.sin(link1.theta), 0.5*np.cos(link1.theta), 0])
         r2 = np.array([-0.5*np.sin(link2.theta), 0.5*np.cos(link2.theta), 0])
         r3 = np.array([-0.5*np.sin(link3.theta), 0.5*np.cos(link3.theta), 0])
