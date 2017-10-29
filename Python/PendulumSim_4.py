@@ -11,7 +11,7 @@ import numpy as np
 window = 0     # number of the glut window
 theta = 0.0
 simTime = 0
-dT = 0.001
+dT = 0.01
 simRun = True
 RAD_TO_DEG = 180.0/3.1416
 
@@ -59,14 +59,10 @@ def main():
         InitGL(640, 480)                 # initialize window
 
         link1 = Link();
-	#For 4 link version
         link2 = Link();
-	link3 = Link();
-	link4 = Link();
-
-
+        link3 = Link();
+        link4 = Link();
         resetSim()
-
         glutMainLoop()                   # start event processing loop
 
 #####################################################
@@ -85,9 +81,8 @@ def resetSim():
         link1.color=[1,0.9,0.9]
         link1.posn=np.array([0.0,0.0,0.0])
         link1.vel=np.array([0.0,0.0,0.0])
-        #link1.theta = 3.9
-	link1.theta = np.pi/ 2
-	link1.omega = 0.0        ## radians per second
+        link1.theta = np.pi/ 2
+        link1.omega = 0.0        ## radians per second
 
         link2.size=[0.04, 1.0, 0.12]
         link2.color=[0.9,0.9,1.0]
@@ -96,14 +91,14 @@ def resetSim():
         link2.theta = np.pi/ 2
         link2.omega = 0.0        ## radians per second
 
-	link3.size=[0.04, 1.0, 0.12]
+        link3.size=[0.04, 1.0, 0.12]
         link3.color=[0.9,0.9,1.0]
         link3.posn=np.array([2.0,0.0,0.0])
         link3.vel=np.array([0.0,0.0,0.0])
         link3.theta = np.pi/ 2
         link3.omega = 0.0        ## radians per second
 
-	link4.size=[0.04, 1.0, 0.12]
+        link4.size=[0.04, 1.0, 0.12]
         link4.color=[0.9,0.9,1.0]
         link4.posn=np.array([3.0,0.0,0.0])
         link4.vel=np.array([0.0,0.0,0.0])
@@ -165,10 +160,35 @@ def SimWorld():
         w2w2r2 = np.cross(omega2, np.cross(omega2, r2))
         w3w3r3 = np.cross(omega3, np.cross(omega3, r3))
         w4w4r4 = np.cross(omega4, np.cross(omega4, r4))
-        b[24:27] = w1w1r1
-        b[27:30] = w1w1r1 + w2w2r2
-        b[30:33] = w2w2r2 + w3w3r3
-        b[33:36] = w3w3r3 + w4w4r4
+
+        ##constrains part
+        kp = 0.0005
+        kd = 0.0001
+        origin = np.array([-0.5 * np.sin(np.pi / 4), 0.5 * np.cos(np.pi / 4) , 0])
+    	wr_1 = np.cross(omega1, r1);
+        wr_2 = np.cross(omega2, r2);
+        wr_3 = np.cross(omega3, r3);
+        wr_4 = np.cross(omega4, r4);
+        con_1  = kp * (link1.posn + r1 - origin) + kd* (wr_1 + link1.vel);
+        con_2  = kp * (link2.posn + r2 - link1.posn - r1) + kd * (wr_2 + link2.vel - wr_1 - link1.vel);
+        con_3  = 0.0009 * (link3.posn + r3 - link2.posn - r2) + 0.0001* (wr_3 + link3.vel - wr_2 - link2.vel);
+        con_4  = 0.001 * (link4.posn + r4 - link3.posn - r3) + 0.0 * (wr_4 + link4.vel - wr_3 - link3.vel);
+
+        b[24:27] = w1w1r1 -  con_1
+        b[27:30] = w1w1r1 + w2w2r2 - con_2
+        b[30:33] = w2w2r2 + w3w3r3 - con_3
+        b[33:36] = w3w3r3 + w4w4r4 - con_4
+
+        ##frictional damping
+        kfriction = 1
+    	tau1 = -kfriction * link1.omega
+        b[5] = tau1
+        tau2 = -kfriction * link2.omega
+        b[11] = tau2
+        tau3 = -kfriction * link3.omega
+        b[17] = tau3
+        tau4 = -kfriction * link4.omega
+        b[23] = tau4
 
         x = np.linalg.solve(a, b)
 

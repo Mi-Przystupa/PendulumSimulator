@@ -59,13 +59,7 @@ def main():
         InitGL(640, 480)                 # initialize window
 
         link1 = Link();
-	#For 4 link version
-        link2 = Link();
-	link3 = Link();
-	link4 = Link();
-
         b = np.array([0,-link1.mass*10.0,0,0,0,0,0,0,0])
-	#b = FourLinkB()
         resetSim()
 
         glutMainLoop()                   # start event processing loop
@@ -86,30 +80,9 @@ def resetSim():
         link1.color=[1,0.9,0.9]
         link1.posn=np.array([0.0,0.0,0.0])
         link1.vel=np.array([0.0,0.0,0.0])
-        #link1.theta = 3.9
-	link1.theta = np.pi/ 4        
-	link1.omega = 0.0        ## radians per second
+        link1.theta = np.pi/ 4
+        link1.omega = 0.0        ## radians per second
 
-        link2.size=[0.04, 1.0, 0.12]
-        link2.color=[0.9,0.9,1.0]
-        link2.posn=np.array([1.0,0.0,0.0])
-        link2.vel=np.array([0.0,0.0,0.0])
-        link2.theta = np.pi/ 4
-        link2.omega = 0        ## radians per second
-
-	link3.size=[0.04, 1.0, 0.12]
-        link3.color=[0.9,0.9,1.0]
-        link3.posn=np.array([1.0,0.0,0.0])
-        link3.vel=np.array([0.0,0.0,0.0])
-        link3.theta = np.pi/ 4
-        link3.omega = 0        ## radians per second
-
-	link4.size=[0.04, 1.0, 0.12]
-        link4.color=[0.9,0.9,1.0]
-        link4.posn=np.array([1.0,0.0,0.0])
-        link4.vel=np.array([0.0,0.0,0.0])
-        link4.theta = np.pi/ 4
-        link4.omega = 0        ## radians per second
 
 #####################################################
 #### keyPressed():  called whenever a key is pressed
@@ -144,13 +117,11 @@ def SimWorld():
 
             #### solve for the equations of motion (simple in this case!)
         acc1 = np.array([0,-10,0])       ### linear acceleration = [0, -G, 0]
-        acc2 = np.array([0,-10,0])       ### linear acceleration = [0, -G, 0]
-
             ####  for the constrained one-link pendulum, and the 4-link pendulum,
             ####  you will want to build the equations of motion as a linear system, and then solve that.
             ####  Here is a simple example of using numpy to solve a linear system.
         m = 1.0
-	r = np.array([-0.5*np.sin(link1.theta), 0.5*np.cos(link1.theta), 0])
+        r = np.array([-0.5*np.sin(link1.theta), 0.5*np.cos(link1.theta), 0])
         Iz = m*m*1.0/12
 
         a = np.array([
@@ -163,10 +134,9 @@ def SimWorld():
                 [-1,0, 0, 0, 0,r[1], 0, 0, 0],
                 [0,-1, 0, 0, 0,-r[0], 0, 0, 0],
                 [0, 0,-1, -r[1],r[0], 0, 0, 0, 0]])
-	
+
         x = np.linalg.solve(a, b)
-             #  print(x)   # [ -2.17647059  53.54411765  56.63235294]
-        #print(x)
+
             #### explicit Euler integration to update the state
         acc1 = x[0:3]
         #print(acc1)
@@ -175,35 +145,30 @@ def SimWorld():
         link1.vel += acc1*dT
         link1.theta += link1.omega*dT
         link1.omega += x[5]*dT
-	kfriction = 1
-	tau = -kfriction * link1.omega
 
-	origin = np.array([-0.5 * np.sin(np.pi / 4), 0.5 * np.cos(np.pi / 4) , 0])
-		
-	kp = 1.0
-	kd = 0.0
-	
-	#constraint = kp * (link1.posn - r - origin) + kd * (np.cross(x[3:6], r) +link1.vel)
-
-	w = x[3:6]
-	w_new = np.cross(w, r);
-	constraint = kp * (link1.posn + r - origin) + kd * (w_new + link1.vel);
-	wwr = np.cross(w, w_new) + constraint;
-	
-	b[5] = tau
+        ##frictional damping
+        kfriction = 1
+        tau = -kfriction * link1.omega
+        b[5] = tau
+        ##stabilization constains
+        origin = np.array([-0.5 * np.sin(np.pi / 4), 0.5 * np.cos(np.pi / 4) , 0])
+        kp = 1.0
+        kd = 0.0
+        w_new = np.cross( x[3:6], r);
+        constraint = kp * (link1.posn + r - origin) + kd * (w_new + link1.vel);
         b[6] = -r[0]*link1.omega*link1.omega + constraint[0]
-        b[7] = -r[1]*link1.omega*link1.omega + constraint [1] 
-	b[8] = constraint[2] 
+        b[7] = -r[1]*link1.omega*link1.omega + constraint [1]
+        b[8] = -constraint[2]
 
         simTime += dT
 
-            #### draw the updated state
+        #### draw the updated state
         DrawWorld()
-        printf("simTime=%.2f\n",simTime) 
-	kinetic = .5 * (Iz + link1.mass * .5**2) * link1.omega**2 #From piazza 
-	# Formula I found in text: m * g * d / 2 * (1 - cos(theta), d = .5 for us
-	potential = link1.mass * -10 * .25 * (1 - np.cos(link1.theta)) 
-	printf("Kinetic: %.2f, Potential: %.2f\n", kinetic, potential)
+        printf("simTime=%.2f\n",simTime)
+        kinetic = .5 * (Iz + link1.mass * .5**2) * link1.omega**2 #From piazza
+        # Formula I found in text: m * g * d / 2 * (1 - cos(theta), d = .5 for us
+        potential = link1.mass * -10 * .25 * (1 - np.cos(link1.theta))
+        printf("Kinetic: %.2f, Potential: %.2f\n", kinetic, potential)
 
 #####################################################
 #### DrawWorld():  draw the world
@@ -218,9 +183,6 @@ def DrawWorld():
 
         DrawOrigin()
         link1.draw()
-        link2.draw()
-	link3.draw()
-	link4.draw()
 
         glutSwapBuffers()                      # swap the buffers to display what was just drawn
 
