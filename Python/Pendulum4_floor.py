@@ -43,7 +43,7 @@ class Link:
 
 def main():
         global window
-        global link1, link2, link3, link4
+        global link1, link2, link3, link4, link5
         global b
 
         glutInit(sys.argv)
@@ -62,6 +62,7 @@ def main():
         link2 = Link();
         link3 = Link();
         link4 = Link();
+        link5 = Link(); # the "floor"
         b = FourLinkB(link1.mass,link2.mass,link3.mass,link4.mass)
 
 
@@ -73,7 +74,7 @@ def main():
 #####################################################
 
 def resetSim():
-        global link1, link2, link3, link4
+        global link1, link2, link3, link4, link5
         global simTime, simRun
 
         printf("Simulation reset\n")
@@ -108,6 +109,13 @@ def resetSim():
         link4.theta = np.pi/ 2
         link4.omega = 0.0        ## radians per second
 
+        link5.size=[0.04, 5.0, 0.12]
+        link5.color=[0.9,0.9,1.0]
+        link5.posn=np.array([0.0,-3.5,0.0])
+        link5.vel=np.array([0.0,0.0,0.0])
+        link5.theta = np.pi/ 2
+        link5.omega = 0.0        ## radians per second
+
 #####################################################
 #### keyPressed():  called whenever a key is pressed
 #####################################################
@@ -133,7 +141,7 @@ def keyPressed(key,x,y):
 
 def SimWorld():
         global simTime, dT, simRun
-        global link1, link2, link3, link4
+        global link1, link2, link3, link4, link5
 
         deltaTheta = 2.4
         if (simRun==False):             ## is simulation stopped?
@@ -193,6 +201,21 @@ def SimWorld():
         tau4 = -kfriction * link4.omega
         b[23] = tau4
 
+        #floor dragging
+        y0 = np.abs(link5.posn[1]); # height from "top" to floor
+        y = np.abs(-r4[1] + link4.posn[1])
+        yvel = link4.vel[1]
+        if (y >= y0):
+            kp = .1
+            kd = .1
+            Fy = np.abs ( kp*(y0 - y) - kd*yvel) 
+            Torq = kd * link4.omega - r4[1] * Fy
+            b[22] = Torq
+            b[19] = b[19] + Fy
+        else:
+            b[19] = -10 * link4.mass
+            b[21:24] = 0
+
         x = np.linalg.solve(a, b)
 
             #### explicit Euler integration to update the state
@@ -217,7 +240,7 @@ def SimWorld():
         acc4 = x[18:21]
         link4.posn += link4.vel*dT
         link4.vel += acc4*dT
-        link4.theta += link4.omega*dT
+        link4.theta += link4.omega*dT 
         link4.omega += x[23]*dT
 
         simTime += dT
@@ -229,7 +252,7 @@ def SimWorld():
 #####################################################
 
 def DrawWorld():
-        global link1, link2, link3, link4
+        global link1, link2, link3, link4, link5
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	# Clear The Screen And The Depth Buffer
         glLoadIdentity();
@@ -240,6 +263,7 @@ def DrawWorld():
         link2.draw()
         link3.draw()
         link4.draw()
+        link5.draw()
         DrawOrigin()
         glutSwapBuffers()                      # swap the buffers to display what was just drawn
 
