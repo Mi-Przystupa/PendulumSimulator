@@ -202,15 +202,17 @@ def SimWorld():
         b[23] = tau4
 
         #floor dragging
-        y0 = np.abs(link5.posn[1]); # height from "top" to floor
-        y = np.abs(-r4[1] + link4.posn[1])
+        y0 = link5.posn[1]; # height from "top" to floor
+        y = -r4[1] + link4.posn[1]
         yvel = link4.vel[1]
-        if (y >= y0):
-            kp = .1
-            kd = .1
-            Fy = np.abs ( kp*(y0 - y) - kd*yvel) 
-            Torq = kd * link4.omega - r4[1] * Fy
-            b[22] = Torq
+        if (y <= y0):
+            kp = 10 
+            kd = 10
+            Fy =  kp*(y0 - y) - kd*yvel 
+            Torq = np.cross(r4, np.array([0, Fy, 0]))
+            #Torq=  0.01* kd * link4.omega - r4[1] * Fy
+            #b[23] = Torq
+            b[21:24] = Torq + b[21:24]
             b[19] = b[19] + Fy
         else:
             b[19] = -10 * link4.mass
